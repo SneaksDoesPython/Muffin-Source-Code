@@ -1,0 +1,106 @@
+# Imports
+import discord
+import random
+import os
+import requests;
+import json;
+import asyncio
+from discord.ext import commands
+
+# Base Vars
+client = commands.Bot (command_prefix = '.')
+rand_choice = random.choice
+sad_words = [
+  "sad",   "depressed",   "unhappy",   "angry",   "miserable",   "depressing"]
+
+# Encouragements
+encouragements = [
+  "Cheer up",  "Hang in there",  "Calm down, its gonna be a-okay",  "Never doubt yourself",  "Take a deep breath, realax",  "Zen will bring you peace"]
+
+# On ready
+@client.event
+async def on_ready():
+  print("Streaming Time!") 
+  await client.change_presence(activity = discord.Streaming(name = ".help", url = "{Your Twitch}"))
+
+
+#                    #
+#        Fun         #
+#                    #
+
+def get_quote():
+  response = requests.get("https://zenquotes.io/api/random")
+  json_data = json.loads(response.text)
+  quote = json_data[0]['q'] + " - " + json_data[0]['a']
+  return(quote)
+  
+@client.command()
+async def inspire(ctx):
+    quote = get_quote()
+    await ctx.message.channel.send(quote)
+
+@client.command()
+async def ping (ctx):             
+    await ctx.send(f'Pong! Your ping is {round (client.latency * 1000)}ms!'f'')
+
+@client.command(aliases=['8ball', 'test'])
+async def _8ball(ctx, *, question):
+  responses = ['It is certain.',
+               'It is decidedly so.',
+               'Without a doubt',
+               'Yes - definately', 
+               'You may rely on it.',
+               'As I see it, yes',
+               'Most likely',
+               'My sources would say otherwise', 'I would disagree with that...',
+               'Cannot predict now',
+               'My reply is no',
+               'Outlook not so good',
+               'Im Doubtful', ]
+  await ctx.send(f'Question: {question}\nAnswer: {random.choice(responses)}')
+  print('8ball')
+
+#                    #
+#     Moderation     #
+#                    # 
+
+@client.command()
+async def clear(ctx, amount=0):
+  if (ctx.message.author.permissions_in(ctx.message.channel).manage_messages):
+      await ctx.channel.purge(limit= amount+1)
+  else:
+
+      await ctx.send("❌ You Do Not Have Permission To Remove")
+
+@client.command()
+async def kick(ctx, member : discord.Member, *, reason= "None"):
+  if (ctx.message.author.permissions_in(ctx.message.channel).kick_members):
+      await member.kick(reason=reason)
+      await ctx.send(f'💥 {member} was kicked by {ctx.author.mention}, \n Reason given: {reason}')
+
+  else:
+      await ctx.send("❌ You Do Not Have Permission To Kick")
+
+@client.command()  
+async def ban(ctx, member : discord.Member, *, reason= "None"):
+    if (ctx.message.author.permissions_in(ctx.message.channel).ban_members):
+        await member.ban(reason=reason)
+        await ctx.send(f'💥 {member} was banned by {ctx.author.mention}, \n Reason given: {reason}')
+    else:
+        await ctx.send("❌ You Do Not Have Permission To Ban.")
+    print('Ban')
+
+#                    #
+#     In Testing     #
+#                    #
+
+@client.command()
+async def displayembed():
+  helpembed = discord.Embed(
+    title = 'Title',
+    description = 'This is a description.', 
+    colour = discord.Colour.white()
+  )
+
+mySecret = os.environ['TOKEN']
+client.run(mySecret)
